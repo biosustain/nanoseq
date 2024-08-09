@@ -78,7 +78,7 @@ The nf-core/nanoseq pipeline comes with documentation about the pipeline [usage]
 
 ```bash
 nextflow run nf-core/nanoseq \
-    --input samplesheet.csv \
+    --benchling_input benchling/nanopore_sequencing_submission_sample.parquet \
     --protocol DNA \
     --barcode_kit SQK-PBK004 \
     -profile <docker/singularity/podman/institute>

@@ -11,14 +11,17 @@ def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 ////////////////////////////////////////////////////
 
 // Check input path parameters to see if they exist
-checkPathParamList = [ params.input, params.multiqc_config ]
+checkPathParamList = [ params.benchling_input, params.multiqc_config ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters (missing protocol or profile will exit the run.)
-if (params.input) {
-    ch_input = file(params.input)
+if (params.benchling_input) {
+    ch_benchling_input = file(params.benchling_input)
 } else {
-    exit 1, 'Input samplesheet not specified!'
+    exit 1, 'Input benchling samplesheet not specified!'
+}
+if (! params.input_file_template) {
+    exit 1, 'Input file template not specified!'
 }
 
 // Function to check if running offline
@@ -111,6 +114,7 @@ include { MULTIQC               } from '../modules/local/multiqc'
  * SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
  */
 
+include { PREPARE_INPUT                    } from '../subworkflows/biosustain/prepare_input'
 include { INPUT_CHECK                      } from '../subworkflows/local/input_check'
 include { PREPARE_GENOME                   } from '../subworkflows/local/prepare_genome'
 include { QCFASTQ_NANOPLOT_FASTQC          } from '../subworkflows/local/qcfastq_nanoplot_fastqc'
@@ -148,7 +152,6 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoft
 def multiqc_report      = []
 
 workflow NANOSEQ{
-
     // Pre-download test-dataset to get files for '--input_path' parameter
     // Nextflow is unable to recursively download directories via HTTPS
     if (workflow.profile.contains('test') && !workflow.profile.contains('vc')) {
@@ -179,6 +182,12 @@ workflow NANOSEQ{
      * Create empty software versions channel to mix
      */
     ch_software_versions = Channel.empty()
+
+    /*
+     * SUBWORKFLOW: Prepare samplesheet
+     */
+     PREPARE_INPUT ( ch_benchling_input, ch_input_path )
+        .set { ch_input }
 
     /*
      * SUBWORKFLOW: Read in samplesheet, validate and stage input files

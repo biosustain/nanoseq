@@ -5,24 +5,45 @@
     "description": "A pipeline to demultiplex, QC and map Nanopore data",
     "type": "object",
     "definitions": {
+        "biosustain_datalake_integration_options": {
+            "title": "Biosustain's Datalake Integration options",
+            "type": "object",
+            "description": "To properly integrate with biosustain's provenance system and run without manual intervention, pipeline needs additional preparation and finalisation step.",
+            "default": "",
+            "fa_icon": "fab fa-autoprefixer",
+            "properties": {
+                "benchling_input": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "parquet",
+                    "pattern": "^\\S+\\.parquet$",
+                    "schema": "assets/schema_input.json",
+                    "description": "Path to parquet file containing benchling information about the samples in the experiment.",
+                    "help_text": "TODO fix: You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/nanoseq/usage).",
+                    "fa_icon": "fas fa-table",
+                    "default": "./benchling/nanopore_submission_sample.parquet"
+                },
+                "input_file_template": {
+                    "type": "string",
+                    "format": "string",
+                    "description": "Path template, where pipeline can substitute values for barcode, ...",
+                    "help_text": "Example: ./DNFLRS18/20230718_1102_X1_FAP92926_18eff292/fastq_pass/barcode${barcode}/FAP92926_pass_barcode${barcode}_18eff292_ac855c92_0.fastq.gz",
+                    "default": ""
+                }
+            },
+            "required": [
+                "benchling_input"
+            ]
+        },
         "input_output_options": {
             "title": "Input/output options",
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["input", "protocol"],
+            "required": [
+                "protocol"
+            ],
             "properties": {
-                "input": {
-                    "type": "string",
-                    "format": "file-path",
-                    "mimetype": "text/csv",
-                    "pattern": "^\\S+\\.csv$",
-                    "schema": "assets/schema_input.json",
-                    "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/nanoseq/usage).",
-                    "fa_icon": "fas fa-file-csv",
-                    "default": "./samplesheet.csv"
-                },
                 "protocol": {
                     "type": "string",
                     "description": "Input sample type. Valid options: 'DNA', 'cDNA',  and 'directRNA'.",
@@ -500,6 +521,9 @@
         }
     },
     "allOf": [
+        {
+            "$ref": "#/definitions/biosustain_datalake_integration_options"
+        },
         {
             "$ref": "#/definitions/input_output_options"
         },
